@@ -443,9 +443,11 @@
 </div>
 
 <!-- Hidden YouTube iframe -->
-<audio id="bg-music" loop>
-  <source src="music.mp3" type="audio/mpeg">
-</audio>
+<iframe id="yt-player"
+  src="about:blank"
+  allow="autoplay"
+  frameborder="0">
+</iframe>
 
 <script>
   // Cursor
@@ -495,38 +497,65 @@
   window.addEventListener('resize', initRain);
 
   // YouTube player via iframe API
-  const music = document.getElementById('bg-music');
+  let ytPlayer = null;
+  let playing  = false;
+  const VIDEO_ID = '0Azb6_MshGA';
 
-function enterTokyo() {
-  const entry = document.getElementById('entry');
-  const ui = document.getElementById('ui');
-
-  entry.style.opacity = '0';
-
-  setTimeout(() => {
-    entry.style.display = 'none';
-    ui.classList.add('visible');
-  }, 1500);
-
-  music.volume = 0.7;
-  music.play();
-}
-
-function togglePlay() {
-  const btn = document.getElementById('playBtn');
-
-  if (music.paused) {
-    music.play();
-    btn.textContent = '⏸';
-  } else {
-    music.pause();
-    btn.textContent = '▶';
+  function loadYT() {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
   }
-}
 
-function setVol(v) {
-  music.volume = v / 100;
-}
+  window.onYouTubeIframeAPIReady = function() {
+    ytPlayer = new YT.Player('yt-player', {
+      videoId: VIDEO_ID,
+      playerVars: {
+        autoplay: 1,
+        loop: 1,
+        playlist: VIDEO_ID,
+        controls: 0,
+        iv_load_policy: 3,
+        rel: 0,
+      },
+      events: {
+        onReady: e => {
+          e.target.setVolume(70);
+          e.target.playVideo();
+          playing = true;
+        }
+      }
+    });
+  };
+
+  function togglePlay() {
+    if (!ytPlayer) return;
+    const btn = document.getElementById('playBtn');
+    if (playing) {
+      ytPlayer.pauseVideo();
+      btn.textContent = '▶';
+      playing = false;
+    } else {
+      ytPlayer.playVideo();
+      btn.textContent = '⏸';
+      playing = true;
+    }
+  }
+
+  function setVol(v) {
+    if (ytPlayer) ytPlayer.setVolume(parseInt(v));
+  }
+
+  function enterTokyo() {
+    const entry = document.getElementById('entry');
+    const ui    = document.getElementById('ui');
+    entry.style.opacity = '0';
+    setTimeout(() => {
+      entry.style.display = 'none';
+      ui.classList.add('visible');
+    }, 1500);
+    loadYT();
+  }
 </script>
 </body>
 </html>
